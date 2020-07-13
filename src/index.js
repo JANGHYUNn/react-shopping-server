@@ -49,6 +49,6 @@ app.use('/api', docs);
 app.use('/', users);
 app.use('/auth', auth);
 
-app.listen(port, 'localhost', () => {
+app.listen(port, () => {
   console.log(`listen Port : ${port}`);
 });
