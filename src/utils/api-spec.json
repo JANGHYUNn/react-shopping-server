@@ -1,0 +1,142 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "API 문서",
+        "description": "",
+        "version": "1.0"
+    },
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/register": {
+            "post": {
+                "tags": [
+                    "/register"
+                ],
+                "description": "회원 가입을 위한 API 입니다.",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "사용자 이름",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "email",
+                        "in": "formData",
+                        "description": "사용자 이메일",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "password",
+                        "in": "formData",
+                        "description": "사용자 비밀번호",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                      "description": "[완료]가입이 정상적으로 완료되었습니다.",
+                      "content": {
+                        "application/json": {},
+                        "application/xml": {}
+                      }
+                    },
+                    "409": {
+                      "description": "[에러]사용자 아이디가 이미 존재하여 회원 가입이 실패하였습니다.",
+                      "content": {
+                        "application/json": {},
+                        "application/xml": {}
+                      }
+                    },
+                    "500": {
+                      "description": "[에러]서버에 문제가 있어 회원 가입에 실패하였습니다.",
+                      "content": {
+                        "application/json": {},
+                        "application/xml": {}
+                      }
+                    }
+                }
+            }
+        },
+        "/login": {
+          "post": {
+              "tags": [
+                  "/login"
+              ],
+              "description": "로그인을 위한 API 입니다.",
+              "parameters": [
+                  {
+                      "name": "email",
+                      "in": "formData",
+                      "description": "사용자 이메일",
+                      "required": true,
+                      "type": "string"
+                  },
+                  {
+                      "name": "password",
+                      "in": "formData",
+                      "description": "사용자 비밀번호",
+                      "required": true,
+                      "type": "string"
+                  }
+              ],
+              "responses": {
+                  "200": {
+                    "description": "[완료]가입이 정상적으로 완료되었습니다.",
+                    "content": {
+                      "application/json": {},
+                      "application/xml": {}
+                    }
+                  },
+                  "409": {
+                    "description": "[에러]사용자 아이디가 이미 존재하여 회원 가입이 실패하였습니다.",
+                    "content": {
+                      "application/json": {},
+                      "application/xml": {}
+                    }
+                  },
+                  "500": {
+                    "description": "[에러]서버에 문제가 있어 회원 가입에 실패하였습니다.",
+                    "content": {
+                      "application/json": {},
+                      "application/xml": {}
+                    }
+                  }
+              }
+          }
+      }
+        
+    },
+    "definitions": {
+        "Users": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "User's name"
+                }
+            }
+        }
+    },
+    "security": [
+        {
+          "jwt": [],
+          "petstore_auth": [
+            "write:pets",
+            "read:pets"
+          ]
+        }
+    ],
+    "securityDefinitions": {
+        "jwt": {
+          "type": "apiKey",
+          "name": "Authorization",
+          "in": "header"
+        }
+    }
+}
