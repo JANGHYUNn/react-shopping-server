@@ -22,8 +22,7 @@ export const jwtVerify = token =>
 
 // middleware
 export const auth = async (req, res, next) => {
-  if (!req.cookies.x_auth)
-    return res.status(401).json({ message: 'token not defind', status: false });
+  if (!req.cookies.x_auth) return res.json({ isAuth: false, error: true });
 
   // 쿠키에 있는 토큰값 가져옴
   const token = req.cookies.x_auth;
@@ -36,23 +35,19 @@ export const auth = async (req, res, next) => {
     return res.status(401).json('Invalid token');
   }
   // 복호화한 토큰으로 db에서 사용자 정보 찾기
-  const user = await userModel
-    .findById(payload._id)
-    // 포함하거나 제외할 필드명
-    .select('-password')
-    // json 객체로 받아오기 위함
-    .lean()
-    .exec();
-
-  if (!user)
-    return res
-      .status(401)
-      .json({ message: 'user is not found', status: false });
-
+  const user = await userModel.findOne({ _id: payload._id, token });
+  // 포함하거나 제외할 필드명
+  // .select('-password')
+  // json 객체로 받아오기 위함
+  // .lean()
+  // .exec();
+  console.log(user);
+  if (!user) return res.json({ isAuth: false });
+  console.log('??????');
   req.user = {
-    ...user,
+    ...user._doc,
+    isAuth: true,
     status: true,
   };
-
   next();
 };

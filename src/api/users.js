@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 import { newToken } from '../utils/auth.js';
+import { auth } from '../utils/auth';
 
 const router = Router();
 
@@ -39,19 +40,19 @@ router.post('/login', async (req, res) => {
         await user.save(err => {
           if (err) return res.status(500).json('Internal Server Error');
         });
-
         // 토큰값을 쿠키에 저장한다.
         res.cookie('x_auth', token);
-
+        console.log('1111');
         // 로그인 성공 응답
         res.status(200).json({
-          loginSucess: true,
+          loginSuccess: true,
           userInfo: {
             email: user.email,
             name: user.name,
             token: token,
           },
         });
+        console.log('22222');
       }
     });
   } catch (error) {
@@ -60,12 +61,18 @@ router.post('/login', async (req, res) => {
 });
 
 // 로그아웃
-router.get('/logout', (req, res) => {
+router.get('/logout', auth, (req, res) => {
+  console.log(req.user);
   // 로그아웃시 db에 토큰값을 지워준다.
   User.findOneAndUpdate({ _id: req.user._id }, { token: '' }, err => {
     if (err) return res.status(500).send('Internal Server Error');
-    return res.status(200).json('logout');
+    return res.status(200).json({ sucess: true });
   });
+});
+
+// 인증
+router.get('/auth', auth, (req, res) => {
+  res.status(200).json({ ...req.user });
 });
 
 export default router;
