@@ -9,6 +9,7 @@ import morgan from 'morgan';
 // api
 import docs from './utils/api-doc.js';
 import users from './api/users.js';
+import product from './api/product.js';
 
 const app = express();
 const port = 5000;
@@ -62,9 +63,13 @@ mongoose
     console.log(err);
   });
 
+// image
+app.use('/upload', express.static('upload'));
+
 // api
 app.use('/api', docs);
-app.use('/api', users);
+app.use('/api/user', users);
+app.use('/api/product', product);
 
 app.listen(port, () => {
   console.log(`listen Port : ${port}`);

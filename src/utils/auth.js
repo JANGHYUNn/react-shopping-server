@@ -41,9 +41,8 @@ export const auth = async (req, res, next) => {
   // json 객체로 받아오기 위함
   // .lean()
   // .exec();
-  console.log(user);
   if (!user) return res.json({ isAuth: false });
-  console.log('??????');
+  user._doc.isAdmin = user._doc.role === 0 ? false : true;
   req.user = {
     ...user._doc,
     isAuth: true,
