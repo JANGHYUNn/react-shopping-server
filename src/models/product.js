@@ -32,7 +32,7 @@ const productSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
-    continent: {
+    continents: {
       type: Number,
       default: 1,
     },
