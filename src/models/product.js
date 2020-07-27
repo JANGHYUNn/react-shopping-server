@@ -40,6 +40,19 @@ const productSchema = mongoose.Schema(
   { timestamps: true },
 );
 
+productSchema.index(
+  {
+    title: 'text',
+    description: 'text',
+  },
+  {
+    weights: {
+      title: 5, // 중요도
+      discription: 1,
+    },
+  },
+);
+
 // schema를 모델로 감싸준다.
 // mongoose.model(모델명, 스키마정보)
 const Product = mongoose.model('Product', productSchema);
