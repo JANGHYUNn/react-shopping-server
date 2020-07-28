@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Router } from 'express';
 import multer from 'multer';
 import Product from '../models/product';
@@ -83,6 +84,19 @@ router.post('/products', (req, res) => {
           .json({ success: true, productInfo, postSize: productInfo.length });
       });
   }
+});
+
+router.get('/products_by_id', (req, res) => {
+  // 상품 상세 페이지
+  const type = req.query.type; // queryString
+  const productId = req.query.productId;
+
+  Product.find({ _id: productId })
+    .populate('writer')
+    .exec((err, product) => {
+      if (err) return res.status(400).send(err);
+      return res.status(200).send({ success: true, product });
+    });
 });
 
 export default router;
