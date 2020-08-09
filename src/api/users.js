@@ -75,4 +75,59 @@ router.get('/auth', auth, (req, res) => {
   res.status(200).json({ ...req.user });
 });
 
+router.post('/addToCart', auth, (req, res) => {
+  // 해당 유저 정보 가져오기
+  User.findOne({ _id: req.user._id }, (err, userInfo) => {
+    if (err) return res.status(400).send(err);
+
+    // 같은 상품이 있는지 확인
+    let duplicate = false;
+    userInfo.cart.forEach(item => {
+      if (item.id === req.body.productId) {
+        duplicate = true;
+      }
+    });
+
+    // 같은 상품이 있을시
+    if (duplicate) {
+      User.findOneAndUpdate(
+        {
+          _id: req.user._id,
+          'cart.id': req.body.productId,
+        },
+        {
+          $inc: { 'cart.$.quantity': 1 },
+        },
+        {
+          new: true,
+        },
+        (err, userInfo) => {
+          if (err) return res.status(400).send(err);
+          res.status(200).send(userInfo);
+        },
+      );
+    } else {
+      User.findOneAndUpdate(
+        {
+          _id: req.user._id,
+        },
+        {
+          $push: {
+            cart: {
+              id: req.body.productId,
+              quantity: 1,
+              date: Date.now(),
+            },
+          },
+        },
+        { new: true },
+        (err, userInfo) => {
+          if (err) return res.status(400).json({ sucess: false, err });
+          return res.status(200).send(userInfo);
+        },
+      );
+    }
+  });
+});
+
 export default router;

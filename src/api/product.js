@@ -89,9 +89,13 @@ router.post('/products', (req, res) => {
 router.get('/products_by_id', (req, res) => {
   // 상품 상세 페이지
   const type = req.query.type; // queryString
-  const productId = req.query.productId;
+  let productIds = req.query.productId;
 
-  Product.find({ _id: productId })
+  if (type === 'array') {
+    let ids = req.query.id.split(',');
+    productIds = ids.map(item => item);
+  }
+  Product.find({ _id: { $in: productIds } })
     .populate('writer')
     .exec((err, product) => {
       if (err) return res.status(400).send(err);
