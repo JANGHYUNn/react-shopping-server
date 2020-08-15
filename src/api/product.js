@@ -92,6 +92,9 @@ router.get('/products_by_id', (req, res) => {
   let productIds = req.query.productId;
 
   if (type === 'array') {
+    if (!req.query.id) {
+      return;
+    }
     let ids = req.query.id.split(',');
     productIds = ids.map(item => item);
   }
@@ -99,7 +102,7 @@ router.get('/products_by_id', (req, res) => {
     .populate('writer')
     .exec((err, product) => {
       if (err) return res.status(400).send(err);
-      return res.status(200).send({ success: true, product });
+      return res.status(200).send(product);
     });
 });
 
