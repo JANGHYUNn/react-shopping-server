@@ -4,6 +4,8 @@ import User from '../models/User.js';
 import { newToken } from '../utils/auth.js';
 import { auth } from '../utils/auth';
 import Product from '../models/product.js';
+import Payment from '../models/payment';
+import async from 'async';
 
 const router = Router();
 
@@ -77,11 +79,10 @@ router.get('/auth', auth, (req, res) => {
 });
 
 router.post('/addToCart', auth, (req, res) => {
-  // 해당 유저 정보 가져오기
+  //먼저  User Collection에 해당 유저의 정보를 가져오기
   User.findOne({ _id: req.user._id }, (err, userInfo) => {
-    if (err) return res.status(400).send(err);
+    // 가져온 정보에서 카트에다 넣으려 하는 상품이 이미 들어 있는지 확인
 
-    // 같은 상품이 있는지 확인
     let duplicate = false;
     userInfo.cart.forEach(item => {
       if (item.id === req.body.productId) {
@@ -89,29 +90,22 @@ router.post('/addToCart', auth, (req, res) => {
       }
     });
 
-    // 같은 상품이 있을시
+    //상품이 이미 있을때
     if (duplicate) {
       User.findOneAndUpdate(
-        {
-          _id: req.user._id,
-          'cart.id': req.body.productId,
-        },
-        {
-          $inc: { 'cart.$.quantity': 1 },
-        },
-        {
-          new: true,
-        },
+        { _id: req.user._id, 'cart.id': req.body.productId },
+        { $inc: { 'cart.$.quantity': 1 } },
+        { new: true },
         (err, userInfo) => {
-          if (err) return res.status(400).send(err);
-          res.status(200).send(userInfo);
+          if (err) return res.status(200).json({ success: false, err });
+          res.status(200).send(userInfo.cart);
         },
       );
-    } else {
+    }
+    //상품이 이미 있지 않을때
+    else {
       User.findOneAndUpdate(
-        {
-          _id: req.user._id,
-        },
+        { _id: req.user._id },
         {
           $push: {
             cart: {
@@ -123,8 +117,8 @@ router.post('/addToCart', auth, (req, res) => {
         },
         { new: true },
         (err, userInfo) => {
-          if (err) return res.status(400).json({ sucess: false, err });
-          return res.status(200).send(userInfo);
+          if (err) return res.status(400).json({ success: false, err });
+          res.status(200).send(userInfo.cart);
         },
       );
     }
@@ -149,6 +143,74 @@ router.get('/removeFromCart', auth, (req, res) => {
         .exec((err, productInfo) =>
           res.status(200).json({ productInfo, cart }),
         );
+    },
+  );
+});
+
+router.post('/successBy', auth, (req, res) => {
+  // 간단한 결제정보 insert
+  let history = [];
+  let transactionData = {};
+
+  req.body.cartDetail.forEach(item => {
+    history.push({
+      dateOfPurchase: Date.now(),
+      name: item.title,
+      id: item._id,
+      price: item.price,
+      quantity: item.quantity,
+      paymentId: req.body.paymentData.paymentID,
+    });
+  });
+
+  // payment collection 자세한 정보 insert
+  transactionData.user = {
+    id: req.user._id,
+    name: req.user.name,
+    email: req.user.email,
+  };
+
+  transactionData.data = req.body.paymentData;
+  transactionData.product = history;
+
+  User.findOneAndUpdate(
+    { _id: req.user._id },
+    { $push: { history }, $set: { cart: [] } },
+    { new: true },
+    (err, user) => {
+      if (err) return res.json({ success: false, err });
+
+      const payment = new Payment(transactionData);
+      payment.save((err, doc) => {
+        if (err) return res.json({ success: false, err });
+
+        // sold 필드 업데이트
+
+        let products = [];
+        doc.product.forEach(item => {
+          products.push({ id: item.id, quantity: item.quantity });
+        });
+
+        async.eachSeries(
+          products,
+          (item, callback) => {
+            Product.update(
+              { _id: item.id },
+              { $inc: { sold: item.quantity } },
+              { new: false },
+              callback,
+            );
+          },
+          err => {
+            if (err) return res.status(400).json({ success: false, err });
+            res.status(200).json({
+              success: true,
+              cart: user.cart,
+              cartDetail: [],
+            });
+          },
+        );
+      });
     },
   );
 });
